@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-
+import { createPortal } from "react-dom";
 
 export default function DataOutfitPage() {
   const API_BASE = "http://localhost:3001/api/outfit";
@@ -195,101 +195,147 @@ export default function DataOutfitPage() {
       </footer>
 
       {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setModalOpen(false)} />
-          <form
-            onSubmit={handleSubmit}
-            className="relative bg-white rounded-2xl p-6 w-[90%] max-w-xl shadow-lg z-10"
+      {modalOpen &&
+  createPortal(
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+      
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-black/40"
+        onClick={() => setModalOpen(false)}
+      />
+
+      {/* Modal Box */}
+      <form
+        onSubmit={handleSubmit}
+        className="
+          relative
+          bg-white
+          rounded-2xl
+          w-[90%]
+          max-w-xl
+          max-h-[85vh]
+          overflow-y-auto
+          p-6
+          shadow-2xl
+          z-10
+        "
+      >
+        <h2 className="text-xl font-semibold mb-4 text-center">
+          {isEditing ? "✏️ Edit Outfit" : "➕ Tambah Outfit"}
+        </h2>
+
+        {/* Kode Outfit */}
+        <label className="block mb-3 text-sm">
+          Kode Outfit
+          <input
+            value={form.kode_outfit}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, kode_outfit: e.target.value }))
+            }
+            className="w-full mt-1 p-2 border rounded"
+            required
+          />
+        </label>
+
+        {/* Nama Outfit */}
+        <label className="block mb-3 text-sm">
+          Nama Outfit
+          <input
+            value={form.nama_outfit}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, nama_outfit: e.target.value }))
+            }
+            className="w-full mt-1 p-2 border rounded"
+            required
+          />
+        </label>
+
+        {/* Harga */}
+        <label className="block mb-3 text-sm">
+          Harga
+          <input
+            type="number"
+            value={form.harga}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, harga: e.target.value }))
+            }
+            className="w-full mt-1 p-2 border rounded"
+            required
+          />
+        </label>
+
+        {/* Bahan */}
+        <label className="block mb-3 text-sm">
+          Bahan
+          <input
+            value={form.bahan}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, bahan: e.target.value }))
+            }
+            className="w-full mt-1 p-2 border rounded"
+            required
+          />
+        </label>
+
+        {/* Warna */}
+        <label className="block mb-3 text-sm">
+          Warna
+          <input
+            value={form.warna}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, warna: e.target.value }))
+            }
+            className="w-full mt-1 p-2 border rounded"
+            required
+          />
+        </label>
+
+        {/* Gaya */}
+        <label className="block mb-3 text-sm">
+          Gaya
+          <input
+            value={form.gaya}
+            onChange={(e) =>
+              setForm((s) => ({ ...s, gaya: e.target.value }))
+            }
+            className="w-full mt-1 p-2 border rounded"
+            required
+          />
+        </label>
+
+        {/* Gambar */}
+        <label className="block mb-4 text-sm">
+          Gambar Outfit
+          <input
+            type="file"
+            accept="image/*"
+            onChange={(e) => setGambar(e.target.files[0])}
+            className="w-full mt-1"
+          />
+        </label>
+
+        {/* Action Button */}
+        <div className="flex justify-end gap-3 mt-4">
+          <button
+            type="button"
+            onClick={() => setModalOpen(false)}
+            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
           >
-            <h2 className="text-xl font-semibold mb-4">{isEditing ? "Edit Outfit" : "Tambah Outfit"}</h2>
-
-            <label className="block mb-2 text-sm">
-              Kode Outfit
-              <input
-                value={form.kode_outfit}
-                onChange={(e) => setForm((s) => ({ ...s, kode_outfit: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
-                required
-              />
-            </label>
-
-            <label className="block mb-2 text-sm">
-              Nama Outfit
-              <input
-                value={form.nama_outfit}
-                onChange={(e) => setForm((s) => ({ ...s, nama_outfit: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
-                required
-              />
-            </label>
-
-            <label className="block mb-2 text-sm">
-              Harga
-              <input
-                value={form.harga}
-                onChange={(e) => setForm((s) => ({ ...s, harga: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
-                required
-              />
-            </label>
-
-            <label className="block mb-2 text-sm">
-              Bahan
-              <input
-                value={form.bahan}
-                onChange={(e) => setForm((s) => ({ ...s, bahan: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
-                required
-              />
-            </label>
-
-            <label className="block mb-2 text-sm">
-              Warna
-              <input
-                value={form.warna}
-                onChange={(e) => setForm((s) => ({ ...s, warna: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
-                required
-              />
-            </label>
-
-            <label className="block mb-2 text-sm">
-              Gaya
-              <input
-                value={form.gaya}
-                onChange={(e) => setForm((s) => ({ ...s, gaya: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
-                required
-              />
-            </label>
-
-            <label className="block mb-2 text-sm">
-              Gambar Outfit
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(e) => setGambar(e.target.files[0])}
-                className="w-full mt-1"
-              />
-            </label>
-
-
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded bg-gray-200"
-              >
-                Batal
-              </button>
-              <button type="submit" className="px-4 py-2 rounded bg-[#E8B4B8] text-white">
-                Simpan
-              </button>
-            </div>
-          </form>
+            Batal
+          </button>
+          <button
+            type="submit"
+            className="px-4 py-2 rounded bg-[#E8B4B8] text-white hover:bg-[#C88A96]"
+          >
+            Simpan
+          </button>
         </div>
-      )}
+      </form>
+    </div>,
+    document.body
+  )}
+
     </div>
   );
 }

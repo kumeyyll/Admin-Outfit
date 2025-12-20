@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 export default function DataNilaiPage() {
   const API_NILAI = "http://localhost:3001/api/nilai_outfit";
@@ -189,14 +190,32 @@ export default function DataNilaiPage() {
       </div>
 
       {/* Modal */}
-      {modalOpen && (
-        <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setModalOpen(false)} />
-
-          <form
-            onSubmit={handleSubmit}
-            className="relative bg-white rounded-2xl p-6 w-[90%] max-w-xl z-10"
-          >
+            {modalOpen &&
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+            
+            {/* Overlay */}
+            <div
+              className="absolute inset-0 bg-black/40"
+              onClick={() => setModalOpen(false)}
+            />
+      
+            {/* Modal Box */}
+            <form
+              onSubmit={handleSubmit}
+              className="
+                relative
+                bg-white
+                rounded-2xl
+                w-[90%]
+                max-w-xl
+                max-h-[85vh]
+                overflow-y-auto
+                p-6
+                shadow-2xl
+                z-10
+              "
+            >
             <h2 className="text-xl font-semibold mb-4">
               {isEditing ? "Edit Nilai" : "Tambah Nilai"}
             </h2>
@@ -260,8 +279,9 @@ export default function DataNilaiPage() {
               </button>
             </div>
           </form>
-        </div>
-      )}
+    </div>,
+    document.body
+  )}
     </div>
   );
 }

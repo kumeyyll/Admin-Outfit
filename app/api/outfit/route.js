@@ -19,7 +19,7 @@ if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
 export async function GET() {
   const conn = await pool.getConnection();
   const [rows] = await conn.query(
-    "SELECT * FROM outfit ORDER BY id_outfit DESC"
+    "SELECT * FROM outfit ORDER BY id_outfit ASC"
   );
   conn.release();
   return NextResponse.json({ data: rows });
