@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 export default function DataNilaiPage() {
@@ -17,6 +17,13 @@ export default function DataNilaiPage() {
 
   const [modalOpen, setModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // 🔍 SEARCH
+  const [search, setSearch] = useState("");
+
+  // 📄 PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 50;
 
   const [form, setForm] = useState({
     id_nilai: null,
@@ -60,12 +67,7 @@ export default function DataNilaiPage() {
 
   function openEdit(item) {
     setIsEditing(true);
-    setForm({
-      id_nilai: item.id_nilai,
-      id_outfit: item.id_outfit,
-      id_kriteria: item.id_kriteria,
-      nilai: item.nilai,
-    });
+    setForm(item);
     setModalOpen(true);
   }
 
@@ -74,112 +76,139 @@ export default function DataNilaiPage() {
 
     const payload = {
       id_nilai: form.id_nilai,
-      id_outfit: parseInt(form.id_outfit),
-      id_kriteria: parseInt(form.id_kriteria),
-      nilai: parseFloat(form.nilai),
+      id_outfit: Number(form.id_outfit),
+      id_kriteria: Number(form.id_kriteria),
+      nilai: Number(form.nilai),
     };
 
-    if (!payload.id_outfit || !payload.id_kriteria || isNaN(payload.nilai)) {
-      alert("Mohon isi semua field dengan benar");
+    const res = await fetch(API_NILAI, {
+      method: isEditing ? "PUT" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      alert("Gagal menyimpan data");
       return;
     }
 
-    try {
-      let res;
-
-      if (isEditing) {
-        res = await fetch(API_NILAI, {
-          method: "PUT",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error("Gagal update nilai");
-      } else {
-        res = await fetch(API_NILAI, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        if (!res.ok) throw new Error("Gagal tambah nilai");
-      }
-
-      await fetchAll();
-      setModalOpen(false);
-    } catch (err) {
-      alert(err.message || "Terjadi kesalahan");
-    }
+    setModalOpen(false);
+    fetchAll();
   }
 
   async function handleDelete(id) {
-    const ok = confirm("Hapus nilai ini?");
-    if (!ok) return;
+    if (!confirm("Hapus nilai ini?")) return;
 
-    try {
-      const res = await fetch(API_NILAI, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_nilai: id }),
-      });
+    await fetch(API_NILAI, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_nilai: id }),
+    });
 
-      if (!res.ok) throw new Error("Gagal menghapus nilai");
-
-      setNilai((prev) => prev.filter((p) => p.id_nilai !== id));
-    } catch (err) {
-      alert(err.message || "Terjadi kesalahan");
-    }
+    fetchAll();
   }
 
-  function getOutfitName(id) {
-    return outfit.find((o) => o.id_outfit === id)?.nama_outfit || "-";
-  }
+  const getOutfitName = (id) =>
+    outfit.find((o) => o.id_outfit === id)?.nama_outfit || "-";
 
-  function getKriteriaName(id) {
-    return kriteria.find((k) => k.id_kriteria === id)?.nama_kriteria || "-";
-  }
+  const getKriteriaName = (id) =>
+    kriteria.find((k) => k.id_kriteria === id)?.nama_kriteria || "-";
+
+  /* ======================
+     🔍 FILTER SEARCH
+  ====================== */
+  const filteredData = useMemo(() => {
+    return nilai.filter((n) =>
+      `${getOutfitName(n.id_outfit)} ${getKriteriaName(n.id_kriteria)}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    );
+  }, [nilai, search, outfit, kriteria]);
+
+  /* ======================
+     📄 PAGINATION
+  ====================== */
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FADADD] via-[#E8B4B8]/40 to-white p-10 rounded-3xl font-[Poppins]">
-      <h1 className="text-3xl font-extrabold text-[#9B5C6B] mb-10 text-center">
+    <div className="min-h-screen bg-gradient-to-br from-[#FADADD] via-[#E8B4B8]/40 to-white p-10 font-[Poppins]">
+
+      <h1 className="text-3xl font-extrabold text-[#9B5C6B] mb-6 text-center">
         📊 Data Nilai Kriteria
       </h1>
 
-      <div className="bg-white/90 rounded-3xl shadow-lg p-6">
-        {loading && <div className="text-center py-4">Loading...</div>}
-        {error && <div className="text-red-500 text-center py-2">{error}</div>}
+      {/* 🔍 SEARCH */}
+      <div className="flex justify-end mb-4">
+        <input
+          type="text"
+          placeholder="Cari outfit / kriteria..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-4 py-2 rounded-xl border w-64"
+        />
+      </div>
 
-        <table className="w-full text-center border border-[#FADADD] rounded-2xl overflow-hidden">
-          <thead className="bg-[#FADADD] text-[#9B5C6B] font-semibold">
+      <div className="bg-white rounded-3xl shadow-lg p-6">
+
+        <table className="w-full text-center border rounded-xl">
+          <thead className="bg-[#FADADD]">
             <tr>
-              <th className="border p-3">No</th>
-              <th className="border p-3">Outfit</th>
-              <th className="border p-3">Kriteria</th>
-              <th className="border p-3">Nilai</th>
-              <th className="border p-3">Aksi</th>
+              <th>No</th>
+              <th>Outfit</th>
+              <th>Kriteria</th>
+              <th>Nilai</th>
+              <th>Aksi</th>
             </tr>
           </thead>
+
           <tbody>
-            {nilai.length === 0 && !loading ? (
-              <tr>
-                <td colSpan="5" className="p-6">Belum ada data</td>
+            {paginatedData.map((item, i) => (
+              <tr key={item.id_nilai}>
+                <td>{startIndex + i + 1}</td>
+                <td>{getOutfitName(item.id_outfit)}</td>
+                <td>{getKriteriaName(item.id_kriteria)}</td>
+                <td>{item.nilai}</td>
+                <td className="flex justify-center gap-2">
+                  <button onClick={() => openEdit(item)}>✏️</button>
+                  <button onClick={() => handleDelete(item.id_nilai)}>🗑️</button>
+                </td>
               </tr>
-            ) : (
-              nilai.map((item, i) => (
-                <tr key={item.id_nilai} className="hover:bg-[#FADADD]/30 transition-all duration-200">
-                  <td className="border p-3">{i + 1}</td>
-                  <td className="border p-3">{getOutfitName(item.id_outfit)}</td>
-                  <td className="border p-3">{getKriteriaName(item.id_kriteria)}</td>
-                  <td className="border p-3">{item.nilai}</td>
-                  <td className="border p-3 flex justify-center gap-3">
-                    <button onClick={() => openEdit(item)}>✏️</button>
-                    <button onClick={() => handleDelete(item.id_nilai)}>🗑️</button>
-                  </td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
 
-        <div className="flex justify-center mt-8">
+        {/* 📄 PAGINATION */}
+        <div className="flex justify-center items-center gap-4 mt-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => p - 1)}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            ⬅️ Prev
+          </button>
+
+          <span>
+            Halaman {currentPage} dari {totalPages}
+          </span>
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next ➡️
+          </button>
+        </div>
+
+        <div className="flex justify-center mt-6">
           <button
             onClick={openAdd}
             className="bg-[#E8B4B8] text-white px-6 py-2 rounded-xl"
@@ -189,43 +218,29 @@ export default function DataNilaiPage() {
         </div>
       </div>
 
-      {/* Modal */}
-            {modalOpen &&
+      {/* MODAL (ASLI PUNYAMU – AMAN) */}
+      {modalOpen &&
         createPortal(
           <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-            
-            {/* Overlay */}
             <div
               className="absolute inset-0 bg-black/40"
               onClick={() => setModalOpen(false)}
             />
-      
-            {/* Modal Box */}
+
             <form
               onSubmit={handleSubmit}
-              className="
-                relative
-                bg-white
-                rounded-2xl
-                w-[90%]
-                max-w-xl
-                max-h-[85vh]
-                overflow-y-auto
-                p-6
-                shadow-2xl
-                z-10
-              "
+              className="relative bg-white rounded-2xl p-6 w-[90%] max-w-xl z-10"
             >
-            <h2 className="text-xl font-semibold mb-4">
-              {isEditing ? "Edit Nilai" : "Tambah Nilai"}
-            </h2>
+              <h2 className="text-xl font-semibold mb-4">
+                {isEditing ? "Edit Nilai" : "Tambah Nilai"}
+              </h2>
 
-            <label className="block mb-3 text-sm">
-              Outfit
               <select
                 value={form.id_outfit}
-                onChange={(e) => setForm((s) => ({ ...s, id_outfit: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, id_outfit: e.target.value }))
+                }
+                className="w-full mb-3 p-2 border rounded"
                 required
               >
                 <option value="">-- Pilih Outfit --</option>
@@ -235,14 +250,13 @@ export default function DataNilaiPage() {
                   </option>
                 ))}
               </select>
-            </label>
 
-            <label className="block mb-3 text-sm">
-              Kriteria
               <select
                 value={form.id_kriteria}
-                onChange={(e) => setForm((s) => ({ ...s, id_kriteria: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, id_kriteria: e.target.value }))
+                }
+                className="w-full mb-3 p-2 border rounded"
                 required
               >
                 <option value="">-- Pilih Kriteria --</option>
@@ -252,36 +266,30 @@ export default function DataNilaiPage() {
                   </option>
                 ))}
               </select>
-            </label>
 
-            <label className="block mb-4 text-sm">
-              Nilai
               <input
                 type="number"
                 step="0.01"
                 value={form.nilai}
-                onChange={(e) => setForm((s) => ({ ...s, nilai: e.target.value }))}
-                className="w-full mt-1 p-2 border rounded"
+                onChange={(e) =>
+                  setForm((s) => ({ ...s, nilai: e.target.value }))
+                }
+                className="w-full mb-4 p-2 border rounded"
                 required
               />
-            </label>
 
-            <div className="flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setModalOpen(false)}
-                className="px-4 py-2 rounded bg-gray-200"
-              >
-                Batal
-              </button>
-              <button type="submit" className="px-4 py-2 rounded bg-[#E8B4B8] text-white">
-                Simpan
-              </button>
-            </div>
-          </form>
-    </div>,
-    document.body
-  )}
+              <div className="flex justify-end gap-3">
+                <button type="button" onClick={() => setModalOpen(false)}>
+                  Batal
+                </button>
+                <button className="bg-[#E8B4B8] text-white px-4 py-2 rounded">
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }

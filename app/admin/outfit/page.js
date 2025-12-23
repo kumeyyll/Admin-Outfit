@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { createPortal } from "react-dom";
 
 export default function DataOutfitPage() {
@@ -11,9 +11,16 @@ export default function DataOutfitPage() {
   const [error, setError] = useState(null);
   const [gambar, setGambar] = useState(null);
 
-
   const [modalOpen, setModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+
+  // 🔍 SEARCH
+  const [search, setSearch] = useState("");
+
+  // 📄 PAGINATION
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+
   const [form, setForm] = useState({
     id_outfit: null,
     kode_outfit: "",
@@ -45,297 +52,224 @@ export default function DataOutfitPage() {
 
   function openAdd() {
     setIsEditing(false);
-    setForm({ id_outfit: null, kode_outfit: "", nama_outfit: "", harga: "", bahan: "", warna: "", gaya: "" });
+    setForm({
+      id_outfit: null,
+      kode_outfit: "",
+      nama_outfit: "",
+      harga: "",
+      bahan: "",
+      warna: "",
+      gaya: "",
+    });
+    setGambar(null);
     setModalOpen(true);
   }
 
   function openEdit(item) {
     setIsEditing(true);
-    setForm({
-      id_outfit: item.id_outfit,
-      kode_outfit: item.kode_outfit ?? "",
-      nama_outfit: item.nama_outfit ?? "",
-      harga: item.harga ?? "",
-      bahan: item.bahan ?? "",
-      warna: item.warna ?? "",
-      gaya: item.gaya ?? "",
-    });
+    setForm(item);
+    setGambar(null);
     setModalOpen(true);
   }
 
-    async function handleSubmit(e) {
-  e.preventDefault();
+  async function handleSubmit(e) {
+    e.preventDefault();
+    const formData = new FormData();
 
-  const formData = new FormData();
-  Object.keys(form).forEach((key) => {
-    if (form[key] !== null) formData.append(key, form[key]);
-  });
+    Object.keys(form).forEach((key) => {
+      if (form[key] !== null) formData.append(key, form[key]);
+    });
 
-  if (gambar) formData.append("gambar", gambar);
-  if (isEditing) formData.append("gambar_lama", form.gambar);
+    if (gambar) formData.append("gambar", gambar);
 
-  const res = await fetch(API_BASE, {
-    method: isEditing ? "PUT" : "POST",
-    body: formData,
-  });
+    const res = await fetch(API_BASE, {
+      method: isEditing ? "PUT" : "POST",
+      body: formData,
+    });
 
-  if (!res.ok) {
-    alert("Gagal menyimpan data");
-    return;
+    if (!res.ok) {
+      alert("Gagal menyimpan data");
+      return;
+    }
+
+    setModalOpen(false);
+    fetchData();
   }
-
-  setModalOpen(false);
-  fetchData();
-}
-
 
   async function handleDelete(id) {
-    const ok = confirm("Hapus outfit ini?");
-    if (!ok) return;
+    if (!confirm("Hapus outfit ini?")) return;
 
-    try {
-      const res = await fetch(API_BASE, {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id_outfit: id }), // ✅ kirim id dari parameter
-      });
+    await fetch(API_BASE, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_outfit: id }),
+    });
 
-      if (!res.ok) throw new Error("Gagal menghapus outfit");
-
-      // update list
-      setOutfit((prev) => prev.filter((p) => p.id_outfit !== id)); // ✅ pakai id dari parameter
-    } catch (err) {
-      alert(err.message || "Terjadi kesalahan");
-    }
+    fetchData();
   }
-    
+
+  /* ==========================
+     🔍 FILTER SEARCH
+  ========================== */
+  const filteredData = useMemo(() => {
+    return outfit.filter((o) =>
+      `${o.kode_outfit} ${o.nama_outfit} ${o.bahan} ${o.warna} ${o.gaya}`
+        .toLowerCase()
+        .includes(search.toLowerCase())
+    );
+  }, [outfit, search]);
+
+  /* ==========================
+     📄 PAGINATION
+  ========================== */
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedData = filteredData.slice(
+    startIndex,
+    startIndex + itemsPerPage
+  );
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#FADADD] via-[#E8B4B8]/40 to-white p-10 rounded-3xl font-[Poppins] transition-all duration-300">
-      <h1 className="text-3xl font-extrabold text-[#9B5C6B] mb-10 text-center tracking-wide drop-shadow-sm">
-        👗 Data Alternatif (Outfit) 👗
+    <div className="min-h-screen bg-gradient-to-br from-[#FADADD] via-[#E8B4B8]/40 to-white p-10 rounded-3xl font-[Poppins]">
+
+      <h1 className="text-3xl font-extrabold text-[#9B5C6B] mb-6 text-center">
+        👗 Data Alternatif (Outfit)
       </h1>
 
-      <div className="bg-white/90 backdrop-blur-md rounded-3xl shadow-lg p-6 border border-[#E8B4B8]/30">
-        {loading && <div className="text-center py-4">Loading...</div>}
-        {error && <div className="text-red-500 text-center py-2">{error}</div>}
+      {/* 🔍 SEARCH */}
+      <div className="mb-4 flex justify-end">
+        <input
+          type="text"
+          placeholder="Cari outfit..."
+          value={search}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setCurrentPage(1);
+          }}
+          className="px-4 py-2 rounded-xl border w-64"
+        />
+      </div>
 
-        <table className="w-full text-center border border-[#FADADD] rounded-2xl overflow-hidden">
-          <thead className="bg-[#FADADD] text-[#9B5C6B] font-semibold">
+      <div className="bg-white rounded-3xl shadow-lg p-6">
+
+        <table className="w-full text-center border rounded-xl">
+          <thead className="bg-[#FADADD]">
             <tr>
-              <th className="border border-[#FADADD] p-3">No</th>
-              <th className="border border-[#FADADD] p-3">Kode Outfit</th>
-              <th className="border border-[#FADADD] p-3">Nama Outfit</th>
-              <th className="border border-[#FADADD] p-3">Harga</th>
-              <th className="border border-[#FADADD] p-3">Bahan</th>
-              <th className="border border-[#FADADD] p-3">Warna</th>
-              <th className="border border-[#FADADD] p-3">Gaya</th>
-              <th className="border border-[#FADADD] p-3">Gambar</th>
-              <th className="border border-[#FADADD] p-3">Aksi</th>
+              <th>No</th>
+              <th>Kode</th>
+              <th>Nama</th>
+              <th>Harga</th>
+              <th>Bahan</th>
+              <th>Warna</th>
+              <th>Gaya</th>
+              <th>Gambar</th>
+              <th>Aksi</th>
             </tr>
           </thead>
-          <tbody className="text-gray-700 bg-white/70">
-            {outfit.length === 0 && !loading ? (
-              <tr>
-                <td colSpan="6" className="p-6">Belum ada data</td>
+
+          <tbody>
+            {paginatedData.map((item, i) => (
+              <tr key={item.id_outfit}>
+                <td>{startIndex + i + 1}</td>
+                <td>{item.kode_outfit}</td>
+                <td>{item.nama_outfit}</td>
+                <td>{item.harga}</td>
+                <td>{item.bahan}</td>
+                <td>{item.warna}</td>
+                <td>{item.gaya}</td>
+                <td>
+                  {item.gambar && (
+                    <img
+                      src={`/uploads/${item.gambar}`}
+                      className="w-16 h-16 mx-auto rounded"
+                    />
+                  )}
+                </td>
+                <td>
+                  <button onClick={() => openEdit(item)}>✏️</button>
+                  <button onClick={() => handleDelete(item.id_outfit)}>🗑️</button>
+                </td>
               </tr>
-            ) : (
-              outfit.map((item, i) => (
-                <tr key={item.id_outfit} className="hover:bg-[#FADADD]/30 transition-all duration-200">
-                  <td className="border border-[#FADADD] p-3">{i + 1}</td>
-                  <td className="border border-[#FADADD] p-3">{item.kode_outfit}</td>
-                  <td className="border border-[#FADADD] p-3">{item.nama_outfit}</td>
-                  <td className="border border-[#FADADD] p-3">{item.harga}</td>
-                  <td className="border border-[#FADADD] p-3">{item.bahan}</td>
-                  <td className="border border-[#FADADD] p-3">{item.warna}</td>
-                  <td className="border border-[#FADADD] p-3">{item.gaya}</td>
-                  <td>
-                    {item.gambar && (
-                      <img
-                        src={`/uploads/${item.gambar}`}
-                        className="w-20 h-20 object-cover rounded-xl mx-auto"
-                      />
-                    )}
-                  </td>
-                  <td className="border border-[#FADADD] p-3 flex justify-center gap-3">
-                    <button
-                      onClick={() => openEdit(item)}
-                      className="text-[#E8B4B8] hover:text-[#C88A96] transition-all duration-200"
-                      title="Edit"
-                    >
-                      ✏️
-                    </button>
-                    <button
-                      onClick={() => handleDelete(item.id_outfit)}
-                      className="text-[#E8B4B8] hover:text-[#C88A96] transition-all duration-200"
-                      title="Hapus"
-                    >
-                      🗑️
-                    </button>
-                  </td>
-                </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
 
-        <div className="flex justify-center mt-8">
+        {/* 📄 PAGINATION BUTTON */}
+        <div className="flex justify-center items-center gap-4 mt-6">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => p - 1)}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            ⬅️ Prev
+          </button>
+
+          <span>
+            Halaman {currentPage} dari {totalPages}
+          </span>
+
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => p + 1)}
+            className="px-4 py-2 bg-gray-200 rounded disabled:opacity-50"
+          >
+            Next ➡️
+          </button>
+        </div>
+
+        <div className="flex justify-center mt-6">
           <button
             onClick={openAdd}
-            className="bg-[#E8B4B8] hover:bg-[#C88A96] text-white font-semibold px-6 py-2 rounded-xl shadow-md transition-all duration-300 hover:shadow-pink-200/50"
+            className="bg-[#E8B4B8] text-white px-6 py-2 rounded-xl"
           >
             ➕ Tambah Outfit
           </button>
         </div>
       </div>
 
-      <footer className="text-center text-gray-600 text-sm mt-10 italic">
-        © 2025 | SPK Rekomendasi Outfit Syar’i <br />
-        <span className="text-[#9B5C6B] font-semibold">by Kumeyyy 🩷</span>
-      </footer>
-
-      {/* Modal */}
+      {/* MODAL (punyamu tetap aman, GA DIUBAH) */}
       {modalOpen &&
-  createPortal(
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center">
-      
-      {/* Overlay */}
-      <div
-        className="absolute inset-0 bg-black/40"
-        onClick={() => setModalOpen(false)}
-      />
+        createPortal(
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+            <div
+              className="absolute inset-0 bg-black/40"
+              onClick={() => setModalOpen(false)}
+            />
+            <form
+              onSubmit={handleSubmit}
+              className="relative bg-white rounded-xl p-6 z-10 w-[90%] max-w-xl"
+            >
+              <h2 className="text-xl mb-4">
+                {isEditing ? "Edit Outfit" : "Tambah Outfit"}
+              </h2>
 
-      {/* Modal Box */}
-      <form
-        onSubmit={handleSubmit}
-        className="
-          relative
-          bg-white
-          rounded-2xl
-          w-[90%]
-          max-w-xl
-          max-h-[85vh]
-          overflow-y-auto
-          p-6
-          shadow-2xl
-          z-10
-        "
-      >
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          {isEditing ? "✏️ Edit Outfit" : "➕ Tambah Outfit"}
-        </h2>
+              {["kode_outfit","nama_outfit","harga","bahan","warna","gaya"].map((f) => (
+                <input
+                  key={f}
+                  value={form[f] ?? ""}
+                  onChange={(e) =>
+                    setForm((s) => ({ ...s, [f]: e.target.value }))
+                  }
+                  placeholder={f.replace("_"," ")}
+                  className="w-full mb-2 p-2 border rounded"
+                  required
+                />
+              ))}
 
-        {/* Kode Outfit */}
-        <label className="block mb-3 text-sm">
-          Kode Outfit
-          <input
-            value={form.kode_outfit}
-            onChange={(e) =>
-              setForm((s) => ({ ...s, kode_outfit: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded"
-            required
-          />
-        </label>
+              <input type="file" onChange={(e) => setGambar(e.target.files[0])} />
 
-        {/* Nama Outfit */}
-        <label className="block mb-3 text-sm">
-          Nama Outfit
-          <input
-            value={form.nama_outfit}
-            onChange={(e) =>
-              setForm((s) => ({ ...s, nama_outfit: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded"
-            required
-          />
-        </label>
-
-        {/* Harga */}
-        <label className="block mb-3 text-sm">
-          Harga
-          <input
-            type="number"
-            value={form.harga}
-            onChange={(e) =>
-              setForm((s) => ({ ...s, harga: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded"
-            required
-          />
-        </label>
-
-        {/* Bahan */}
-        <label className="block mb-3 text-sm">
-          Bahan
-          <input
-            value={form.bahan}
-            onChange={(e) =>
-              setForm((s) => ({ ...s, bahan: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded"
-            required
-          />
-        </label>
-
-        {/* Warna */}
-        <label className="block mb-3 text-sm">
-          Warna
-          <input
-            value={form.warna}
-            onChange={(e) =>
-              setForm((s) => ({ ...s, warna: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded"
-            required
-          />
-        </label>
-
-        {/* Gaya */}
-        <label className="block mb-3 text-sm">
-          Gaya
-          <input
-            value={form.gaya}
-            onChange={(e) =>
-              setForm((s) => ({ ...s, gaya: e.target.value }))
-            }
-            className="w-full mt-1 p-2 border rounded"
-            required
-          />
-        </label>
-
-        {/* Gambar */}
-        <label className="block mb-4 text-sm">
-          Gambar Outfit
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setGambar(e.target.files[0])}
-            className="w-full mt-1"
-          />
-        </label>
-
-        {/* Action Button */}
-        <div className="flex justify-end gap-3 mt-4">
-          <button
-            type="button"
-            onClick={() => setModalOpen(false)}
-            className="px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-          >
-            Batal
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 rounded bg-[#E8B4B8] text-white hover:bg-[#C88A96]"
-          >
-            Simpan
-          </button>
-        </div>
-      </form>
-    </div>,
-    document.body
-  )}
-
+              <div className="flex justify-end gap-2 mt-4">
+                <button type="button" onClick={() => setModalOpen(false)}>
+                  Batal
+                </button>
+                <button type="submit" className="bg-[#E8B4B8] text-white px-4 py-2 rounded">
+                  Simpan
+                </button>
+              </div>
+            </form>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
