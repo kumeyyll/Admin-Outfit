@@ -34,15 +34,15 @@ export default function DashboardAdmin() {
     <div className="p-6">
       {/* Title */}
       <h1 className="text-2xl font-bold mb-6">
-        Dashboard Admin SPK Outfit Syar’i
+        Dashboard Admin SPK Gamis
       </h1>
 
       {/* Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card title="Total Outfit" value={data.totalOutfit} />
+        <Card title="Total Gamis" value={data.totalOutfit} />
         <Card title="Total Kriteria" value={data.totalKriteria} />
         <Card title="Total Penilaian" value={data.totalNilai} />
-        <Card title="Outfit Terbaik" value={data.outfitTerbaik} />
+        <Card title="Gamis Terbaik" value={data.outfitTerbaik} />
       </div>
     </div>
   );
