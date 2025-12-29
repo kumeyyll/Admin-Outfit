@@ -34,7 +34,7 @@ export default function LoginPage() {
         </div>
 
         <h1 className="text-2xl font-extrabold text-center text-[#9B5C6B] mt-12 mb-6 tracking-wide">
-          Login Admin NyariOutfit ✨
+          Login Admin NyariGamis ✨
         </h1>
 
         <form onSubmit={handleLogin} className="space-y-4">
@@ -79,7 +79,7 @@ export default function LoginPage() {
         <p className="text-center text-[#9B5C6B]/80 text-sm mt-6 leading-relaxed">
           Sistem Pendukung Keputusan <br />
           <span className="text-[#C88A96] font-semibold">
-            Rekomendasi Outfit Syar’i 💕
+            Rekomendasi Gamis 💕
           </span>
         </p>
 

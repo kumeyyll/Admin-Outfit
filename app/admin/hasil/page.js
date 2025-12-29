@@ -61,7 +61,7 @@ export default function HasilPerhitunganPage() {
 
       {/* Footer */}
       <footer className="text-center text-[#704B50] text-sm mt-10 italic">
-        © 2025 | SPK Rekomendasi Outfit Syar’i <br />
+        © 2025 | SPK Rekomendasi Gamis <br />
         <span className="text-[#9B5C6B] font-semibold">by Kumeyyy 🩷</span>
       </footer>
     </div>

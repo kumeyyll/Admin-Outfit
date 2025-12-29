@@ -4,14 +4,14 @@ export default function AdminLayout({ children }) {
       {/* Sidebar */}
       <aside className="w-1/5 bg-gradient-to-b from-[#E8B4B8] via-[#FADADD] to-white shadow-xl flex flex-col items-center py-10 rounded-r-3xl">
         <h1 className="text-3xl font-extrabold mb-10 tracking-wide text-[#5C3D3D] drop-shadow-sm">
-          Nyari<span className="text-[#A76E6E]">Outfit</span> 💕
+          Nyari<span className="text-[#A76E6E]">Gamis</span> 💕
         </h1>
 
         <nav className="w-full flex flex-col items-center">
           {[
             { name: "🏠 Dashboard", path: "/admin/dashboard" },
             { name: "🧾 Data Kriteria", path: "/admin/kriteria" },
-            { name: "👗 Data Alternatif (Outfit)", path: "/admin/outfit" },
+            { name: "👗 Data Alternatif (Gamis)", path: "/admin/outfit" },
             { name: "⭐ Nilai Kriteria / Penilaian", path: "/admin/nilai" },
             // { name: "📊 Hasil Perhitungan SAW", path: "/admin/hasil" },
             // { name: "👩‍💻 Manajemen Admin", path: "/admin/manajemen" },
@@ -28,7 +28,7 @@ export default function AdminLayout({ children }) {
         </nav>
 
         <footer className="mt-auto text-sm text-[#7A4E4E] opacity-75">
-          <p>✨ NyariOutfit Admin ✨</p>
+          <p>✨ NyariGamis Admin ✨</p>
         </footer>
       </aside>
 

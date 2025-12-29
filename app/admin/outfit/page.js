@@ -97,7 +97,7 @@ export default function DataOutfitPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm("Hapus outfit ini?")) return;
+    if (!confirm("Hapus Gamis ini?")) return;
 
     await fetch(API_BASE, {
       method: "DELETE",
@@ -133,14 +133,14 @@ export default function DataOutfitPage() {
     <div className="min-h-screen bg-gradient-to-br from-[#FADADD] via-[#E8B4B8]/40 to-white p-10 rounded-3xl font-[Poppins]">
 
       <h1 className="text-3xl font-extrabold text-[#9B5C6B] mb-6 text-center">
-        👗 Data Alternatif (Outfit)
+        👗 Data Alternatif (Gamis)
       </h1>
 
       {/* 🔍 SEARCH */}
       <div className="mb-4 flex justify-end">
         <input
           type="text"
-          placeholder="Cari outfit..."
+          placeholder="Cari gamis..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -222,7 +222,7 @@ export default function DataOutfitPage() {
             onClick={openAdd}
             className="bg-[#E8B4B8] text-white px-6 py-2 rounded-xl"
           >
-            ➕ Tambah Outfit
+            ➕ Tambah Gamis
           </button>
         </div>
       </div>
@@ -240,7 +240,7 @@ export default function DataOutfitPage() {
               className="relative bg-white rounded-xl p-6 z-10 w-[90%] max-w-xl"
             >
               <h2 className="text-xl mb-4">
-                {isEditing ? "Edit Outfit" : "Tambah Outfit"}
+                {isEditing ? "Edit Gamis" : "Tambah Gamis"}
               </h2>
 
               {["kode_outfit","nama_outfit","harga","bahan","warna","gaya"].map((f) => (

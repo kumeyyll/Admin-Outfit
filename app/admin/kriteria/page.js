@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 
 
 export default function DataKriteriaPage() {
-  const API_BASE = "http://localhost:3001/api/kriteria";
+  const API_BASE = "/api/kriteria";
 
   const [kriteria, setKriteria] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -190,7 +190,7 @@ export default function DataKriteriaPage() {
       </div>
 
       <footer className="text-center text-gray-600 text-sm mt-10 italic">
-        © 2025 | SPK Rekomendasi Outfit Syar’i <br />
+        © 2025 | SPK Rekomendasi Gamis <br />
         <span className="text-[#9B5C6B] font-semibold">by Kumeyyy 🩷</span>
       </footer>
 

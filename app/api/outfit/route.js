@@ -56,7 +56,7 @@ export async function POST(req) {
   );
   conn.release();
 
-  return NextResponse.json({ message: "Outfit berhasil ditambahkan" });
+  return NextResponse.json({ message: "Gamis berhasil ditambahkan" });
 }
 
 /* ================= PUT ================= */
@@ -68,7 +68,7 @@ export async function PUT(req) {
 
   // ambil data lama
   const [[oldData]] = await conn.query(
-    "SELECT gambar FROM outfit WHERE id_outfit = ?",
+    "SELECT gambar FROM Gamis WHERE id_outfit = ?",
     [id]
   );
 
@@ -117,7 +117,7 @@ export async function PUT(req) {
 
   conn.release();
 
-  return NextResponse.json({ message: "Outfit berhasil diupdate" });
+  return NextResponse.json({ message: "Gamis berhasil diupdate" });
 }
 
 
@@ -128,7 +128,7 @@ export async function DELETE(req) {
 
   // ambil nama gambar
   const [[data]] = await conn.query(
-    "SELECT gambar FROM outfit WHERE id_outfit = ?",
+    "SELECT gambar FROM Gamis WHERE id_outfit = ?",
     [id_outfit]
   );
 
@@ -139,9 +139,9 @@ export async function DELETE(req) {
   }
 
   // hapus data DB
-  await conn.query("DELETE FROM outfit WHERE id_outfit = ?", [id_outfit]);
+  await conn.query("DELETE FROM Gamis WHERE id_outfit = ?", [id_outfit]);
   conn.release();
 
-  return NextResponse.json({ message: "Outfit & gambar berhasil dihapus" });
+  return NextResponse.json({ message: "Gamis & gambar berhasil dihapus" });
 }
 

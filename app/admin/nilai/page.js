@@ -146,7 +146,7 @@ export default function DataNilaiPage() {
       <div className="flex justify-end mb-4">
         <input
           type="text"
-          placeholder="Cari outfit / kriteria..."
+          placeholder="Cari Gamis / kriteria..."
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);
@@ -162,7 +162,7 @@ export default function DataNilaiPage() {
           <thead className="bg-[#FADADD]">
             <tr>
               <th>No</th>
-              <th>Outfit</th>
+              <th>Gamis</th>
               <th>Kriteria</th>
               <th>Nilai</th>
               <th>Aksi</th>
@@ -243,7 +243,7 @@ export default function DataNilaiPage() {
                 className="w-full mb-3 p-2 border rounded"
                 required
               >
-                <option value="">-- Pilih Outfit --</option>
+                <option value="">-- Pilih Gamis --</option>
                 {outfit.map((o) => (
                   <option key={o.id_outfit} value={o.id_outfit}>
                     {o.nama_outfit}
